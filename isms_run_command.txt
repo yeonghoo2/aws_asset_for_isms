@@ -1,0 +1,149 @@
+
+/etc/login.defs
+
+PASS_MAX_DAYS 90
+PASS_MIN_DAYS 3
+PASS_MIN_LEN 7
+PASS_WARN_AGE 80
+
+
+sed -i 's/^PASS_MAX_DAYS.*/PASS_MAX_DAYS 90/g' /etc/login.defs
+sed -i 's/^PASS_MIN_DAYS.*/PASS_MIN_DAYS 1/g' /etc/login.defs
+sed -i 's/^PASS_MIN_LEN.*/PASS_MIN_LEN 8/g' /etc/login.defs
+sed -i 's/^PASS_WARN_AGE.*/PASS_WARN_AGE 14/g' /etc/login.defs
+
+vi /etc/pam.d/system-auth
+
+sed -i 's/^# dcredit = .*/dcredit = 3/g' /etc/security/pwquality.conf
+sed -i 's/^# ucredit = .*/ucredit = 3/g' /etc/security/pwquality.conf
+sed -i 's/^# lcredit = .*/lcredit = 3/g' /etc/security/pwquality.conf
+sed -i 's/^# ocredit = .*/ocredit = 3/g' /etc/security/pwquality.conf
+
+/etc/security/pwquality.conf
+
+auth	required	pam_tally2.so deny=5 unlock_time=60
+account	required	pam_tally2.so
+
+echo "auth	required	pam_tally2.so deny=5 unlock_time=60" >> /etc/pam.d/system-auth
+echo "account	required	pam_tally2.so" >> /etc/pam.d/system-auth
+sed -i 's/^anonymous_enable=YES/anonymous_enable=NO/g' /etc/vsftpd/vsftpd.conf
+
+U-01
+sed -i 's/^#PermitRootLogin .*/PermitRootLogin no/g' /etc/ssh/sshd_config
+sed -i 's/PermitRootLogin .*/PermitRootLogin no/g' /etc/ssh/sshd_config
+
+
+U-06
+chgrp wheel /bin/su
+chmod /bin/su 4750
+
+cat /etc/group | grep wheel, wheel group에 퇴사자 계정이 있음...삭제해야함.. -> /etc/passwd에서 계정 삭제 (U-33과 관련)
+
+U-10
+/etc/passwd 불필요한 default 계정 삭제
+
+userdel adm
+userdel lp
+userdel sync
+userdel shutdown
+userdel halt
+userdel news
+userdel uucp
+userdel operator
+userdel games
+userdel gopher
+userdel ftp
+
+U-12
+/etc/group 안쓰는 group 삭제
+
+groupdel adm
+groupdel lp
+groupdel news
+groupdel uucp
+groupdel games
+groupdel dip
+groupdel pppusers
+gropudel slipusers
+
+U-13
+동일한 UID 금지,
+usermod -u 1007 bitnami
+usermod -u 1008 bitnamiftp
+
+U-15
+sed -i 's/^#ClientAliveInterval .*/ClientAliveInterval 20/g' /etc/ssh/sshd_config
+sed -i 's/^#ClientAliveCountMax .*/ClientAliveCountMax 10/g' /etc/ssh/sshd_config
+sed -i 's/^ClientAliveInterval .*/ClientAliveInterval 20/g' /etc/ssh/sshd_config
+sed -i 's/^ClientAliveCountMax .*/ClientAliveCountMax 10/g' /etc/ssh/sshd_config
+
+U-19
+chmod 400 /etc/shadow
+
+U-20
+chmod 600 /etc/hosts
+chown root:root /etc/hosts
+
+U-29
+security group으로 접근 제어중
+
+U-33
+cat /etc/passwd | grep custom-user | awk -F: '{print $1}' > /tmp/user.txt
+userdel chris
+
+isms.sh
+
+cat /etc/passwd | grep custom-user | awk -F: '{print $1}' > /tmp/user.txt
+while read line; do
+	find / -user $line -exec chown ec2-user {} \;
+	userdel $line
+done < /tmp/user.txt
+
+
+U-34
+nobody, dbus 계정이 홈디렉토리가 없음
+nobody : 익명 연결( 누구나 연결이 가능해야 하는 서비스가 있는 경우 필요 )
+dbus : 시스템 메시지
+홈디렉토리가 없는 계정 삭제
+userdel nobody
+userdel dbus
+
+U-39
+/etc/cron.allow 파일이 없어서 취약
+echo "root" > /etc/cron.allow
+echo "ec2-user" >> /etc/cron.allow
+echo "ssm-user" >> /etc/cron.allow
+chmod 600 /etc/cron.allow
+
+U-44
+cat /etc/xinetd.d/rsync | grep disable
+output 설정하여 설정상태 확인
+모두 yes일 것으로 예상
+
+U-47
+sendmail 안쓰므로 서비스 중지
+service sendmail stop
+
+U-62
+/etc/ftpusers 존재 소유자 권한 변경
+chmod 640 /etc/ftpusers
+chown root:root /etc/ftpusers
+
+U-63
+vi /etc/ftpusers 들어가서 확인 필요
+
+U-67
+echo "#####################################################" >> /etc/issue.net
+echo "######### Do Not Access Except For Owner!!! #########" >> /etc/issue.net
+echo "#####################################################" >> /etc/issue.net
+
+echo "#####################################################" >> /etc/motd
+echo "######### Do Not Access Except For Owner!!! #########" >> /etc/motd
+echo "#####################################################" >> /etc/motd
+
+
+
+
+
+
+
